@@ -1,0 +1,123 @@
+using System.Collections;
+using System.Collections.Generic;
+using TMPro;
+using Unity.VisualScripting;
+using UnityEngine;
+using UnityEngine.AI;
+
+public class EnemyAi : MonoBehaviour
+{
+    [Header("Combat Variables")]
+    public float AttackRange = 2f;
+    private float attackTime = 0f;
+    public float attackCooldown = 1.5f;
+    public float hitDuration = 0.4f;
+    public float speed = 5f;
+
+    [Header("Health")]
+    public float currentHealth;
+    public float maxHealth = 100f;
+
+    public bool isDead = false;
+    public bool Runner = false;
+
+    [Header("Sounds")]
+    public AudioSource Source;
+    public AudioClip Attack, Hurt;
+
+    [Header("Public Assigned Variables")]
+    public ParticleSystem smoke;
+
+    [Header("Private Variables")]
+    Animator playerAnim;
+    Transform Player;
+    NavMeshAgent Agent;
+    Animator Anim;
+    EnemyAi Ai;
+    zombieSpowner zombieSp;
+    PlayerController PlayerController;
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        zombieSp = FindFirstObjectByType<zombieSpowner>();
+        currentHealth = maxHealth;
+        Ai = GetComponent<EnemyAi>();
+        Agent = GetComponent<NavMeshAgent>();
+        Agent.speed = speed;
+        Player = GameObject.Find("Player").transform;
+        PlayerController = Player.GetComponent<PlayerController>();
+        playerAnim = Player.GetComponent<Animator>();
+        Anim = GetComponent<Animator>();
+        currentHealth = Mathf.Clamp(currentHealth, 0f, maxHealth);
+        Agent.stoppingDistance = AttackRange;
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        if (Player == null) return;
+
+        float distance = Vector3.Distance(transform.position, Player.position);
+
+        if (distance <= AttackRange)
+        {
+            attack();
+        }
+        else
+        {
+            Runner = true;
+            Anim.SetFloat("Speed", 0.2f);
+            Agent.isStopped = false;
+            Agent.SetDestination(Player.position);
+        }
+
+        if (currentHealth <= 0 && !isDead)
+        {
+            if (isDead) return;
+
+            isDead = true;
+            Anim.SetFloat("Speed", 0f);
+            Ai.enabled = false;
+            Runner = false;
+            zombieSp.zombieCounter -= 1;
+            BossComing.ZombiePulseCounter+= 1;
+            Instantiate(smoke, transform.position, Quaternion.identity);
+            weapen_.GunDamage += Random.Range(1, 3);
+            Destroy(gameObject);
+        }
+    }
+
+    void attack()
+    {
+        if (Time.time >= attackTime)
+        {
+            Anim.SetTrigger("Attack");
+            attackTime = Time.time + attackCooldown;
+        }
+    }
+
+    IEnumerator HitFunction()
+    {
+        Agent.isStopped = true;
+
+        yield return new WaitForSeconds(hitDuration);
+
+        Agent.isStopped = false;
+    }
+
+    public void EnemyTakeDamage(float Damage)
+    {
+        if (isDead) return;
+
+        currentHealth -= Damage;
+
+        if (Source && Hurt != null)
+        {
+            Source.PlayOneShot(Hurt);
+        }
+
+        Anim.SetTrigger("Damage");
+        StartCoroutine(HitFunction());
+    }
+}
