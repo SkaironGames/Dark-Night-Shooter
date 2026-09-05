@@ -76,9 +76,14 @@ public class BossAi : MonoBehaviour
         if (BossCurrentHealth <= 0)
         {
             Instantiate(BoomMazzule, transform.position, Quaternion.identity);
-            WinScreen.SetActive(true);
-            Destroy(gameObject, 0.5f);
+            gameObject.SetActive(false);
+            Invoke("win", 0.5f);
         }
+    }
+    void win()
+    {
+            WinScreen.SetActive(true);
+
     }
 
     public void Attack()
