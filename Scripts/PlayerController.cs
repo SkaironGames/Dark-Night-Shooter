@@ -16,7 +16,9 @@ public class PlayerController : MonoBehaviour
     public GameObject offGunScreen;
     public Slider HealthBar;
     public Joystick Joystick;
+    public Swipe Swipe;
     public weapen_ Weapen;
+    public Swipe swipe;
 
     [Header("Sounds")]
     public AudioSource Source;
@@ -63,8 +65,8 @@ public class PlayerController : MonoBehaviour
         float Horizontal = Joystick.Horizontal;
         float Vertical = Joystick.Vertical;
 
-        transform.Rotate(0, Swipe.swipeDelta.x * 0.5f, 0);
-        Swipe.swipeDelta = Vector2.zero;
+        transform.Rotate(0, swipe.swipeDelta.x * 0.5f, 0);
+        swipe.swipeDelta = Vector2.zero;
 
         if (Controller.isGrounded && Velocity.y < 0)
         {
@@ -111,7 +113,7 @@ public class PlayerController : MonoBehaviour
 
     public void RunDown()
     {
-        CurrentSpeed = 20;
+        CurrentSpeed = 15;
 
         if (Source && RunSound != null)
         {
@@ -126,10 +128,7 @@ public class PlayerController : MonoBehaviour
         CurrentSpeed = 10;
     }
 
-    public void Reload()
-    {
-        Weapen.Ammo = 50;
-    }
+   
 
     public void TeckDemage(float Demage)
     {
@@ -152,7 +151,7 @@ public class PlayerController : MonoBehaviour
             GameOverScreen.SetActive(true);
             ZombieKillTx.text = PlayerPrefs.GetInt("ZombiePluseCounter").ToString();
 
-            Destroy(gameObject, 1f);
+            gameObject.SetActive(false);
         }
     }
 
